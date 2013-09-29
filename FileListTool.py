@@ -8,6 +8,8 @@ import sys
 import urwid
 import urwid.signals
 
+from MainzGridManager import MainzGridManager
+
 
 
 ############################################################    
@@ -34,6 +36,17 @@ class DatasetEntry(urwid.WidgetWrap):
         w = urwid.Columns(self.item)
         super(DatasetEntry, self).__init__(w)
 
+
+    #--------------------------------------------------------------------------
+    def __str__(self):
+        """ string representation """
+        return self.path
+    
+    #--------------------------------------------------------------------------
+    def __repr__(self):
+        """ representation token """
+        return '<DatasetEntry: '+str(self)+'>'
+
     #--------------------------------------------------------------------------
     def send_signal(self):
         """ emit signal 'selected' """
@@ -59,7 +72,6 @@ class DatasetEntry(urwid.WidgetWrap):
         else:
             return key
     
-
     #--------------------------------------------------------------------------
     def matchesCriteria(self, posList, negList):
         """
@@ -112,6 +124,18 @@ class TextOption(urwid.WidgetWrap):
 
 
     #--------------------------------------------------------------------------
+    def get_edit_text(self):
+        """
+        Calls the equivalent urwid.Edit widget function
+    
+        Returns:
+            str : the text of the included Edit widget
+        """
+
+        return self.edit.get_edit_text()
+
+
+    #--------------------------------------------------------------------------
     def send_signal(self):
         """ emit signal 'selected' """
         urwid.emit_signal(self, 'modified')
@@ -149,6 +173,7 @@ class FileListTool():
     def __init__(self):
         """ Constructor """
 
+
         self.palette = [
             ('body','dark cyan', '', 'standout'),
             ('focus','dark red', 'light blue', 'standout'),
@@ -158,8 +183,9 @@ class FileListTool():
             ]
         
         # Read available datasets and connect signals
-        datasetEntries  = []
-        for dataset, sample in self.getDatasetsOnGrid().iteritems():
+        self.grid      = MainzGridManager()
+        datasetEntries = []
+        for (dataset, sample) in self.grid.datasets:
             datasetEntry = DatasetEntry(dataset, sample)
             urwid.connect_signal( datasetEntry, 'selected', self.moveEntry, datasetEntry )
             datasetEntries.append( datasetEntry )
@@ -172,11 +198,12 @@ class FileListTool():
                           urwid.Button (   'n : set negative tags'   ) ,
                           urwid.Button (   'q : Quit'                ) ]
         header = urwid.AttrMap( urwid.Columns( headerButtons    ), 'head' )
-        footer = urwid.AttrMap( urwid.Text   ('selected: %d' % 0), 'head' )
+        footer = urwid.AttrMap( urwid.Text   ('selected: %d   |' % 0 ), 'head' )
 
         # Create Sample Widgets
         self.datasetList  = urwid.SimpleListWalker( datasetEntries )
         self.selectedList = urwid.SimpleListWalker( [] )
+        self.notDisplayed = urwid.SimpleListWalker( [] )
         self.listbox_up   = urwid.ListBox( self.datasetList  )
         self.listbox_low  = urwid.ListBox( self.selectedList )
         self.samplesPile  = urwid.Pile(
@@ -186,12 +213,10 @@ class FileListTool():
                                 ] )
 
         # Create Options Widget
-        self.options = urwid.SimpleListWalker(
-                            [
-                                TextOption('Filelist Name:', 'f', 'myList.lst'),
-                                TextOption('Positive Tags:', 'p', ''          ),
-                                TextOption('Negative Tags:', 'n', ''          )
-                            ] )
+        self.filenameOption = TextOption('Filelist Name:', 'f', 'myList.lst')
+        self.posListOption  = TextOption('Positive Tags:', 'p', ''          )
+        self.negListOption  = TextOption('Negative Tags:', 'n', ''          )
+        self.options = urwid.SimpleListWalker( [self.filenameOption, self.posListOption, self.negListOption] )
         for option in self.options:
             urwid.connect_signal(option, 'modified', self.optionsChanged)
         self.optionsBox = urwid.LineBox ( urwid.Padding( urwid.ListBox( self.options ), left=2), title='Options')
@@ -233,7 +258,8 @@ class FileListTool():
             print('Something strange happend!')
             sys.exit(1)
 
-        self.view.set_footer( urwid.AttrMap( urwid.Text('selected: %d' % len(self.selectedList)), 'head' ) )
+        # update status message
+        self.setStatusMessage()
 
 
     #--------------------------------------------------------------------------
@@ -253,7 +279,7 @@ class FileListTool():
 
         # create the filelist
         if key is 'c':
-            createFileList()
+            self.createFileList()
 
         # Use tab to switch between datasetList and selectedList
         if key is 'tab':
@@ -274,34 +300,33 @@ class FileListTool():
         """ Set focus on samples list """
 
         # Get selection options and filter
-        for option in self.options:
-            # Try to identify th eaccoring option object
+        posList = self.posListOption.get_edit_text().split(',')
+        negList = self.negListOption.get_edit_text().split(',')
 
-        for sample in self.datasetList:
-            if sample.matchesCriteria(posList=[],negList=['Zee']) == False:
-                self.datasetList.remove(sample)
+        # Remove empty strings from lists
+        if u'' in posList: posList.remove(u'')
+        if u'' in negList: negList.remove(u'')
 
+
+        # Update selection list
+        #rejected = [ datasetEntry for datasetEntry in self.datasetList if datasetEntry.matchesCriteria(posList=posList,negList=negList) == True ]
+        for sample in self.datasetList[:]:
+            if sample.matchesCriteria(posList=posList, negList=negList) == False:
+                self.datasetList .remove( sample )
+                self.notDisplayed.append( sample )
+        for sample in self.notDisplayed[:]:
+            if sample.matchesCriteria(posList=posList, negList=negList) == True:
+                self.datasetList .append( sample )
+                self.notDisplayed.remove( sample )
 
         self.centralColumns.set_focus(0)
 
 
     #--------------------------------------------------------------------------
-    def getDatasetsOnGrid(self):
-        """
-        Get list of datasets on MAINZGRID
-    
-        Returns:
-            dict : datasets stored on localgroupdisk
-        """
-        
-        # TODO: Change this to dq2-list-datasets
+    def setStatusMessage(self, msg=''):
+        """ Set update status message in footer """
 
-        listDatasets = {147806 : 'inclusive Zee',
-                        129504 : 'Diboson WW'   ,
-                        113512 : 'SingleTop'    ,
-                        123553 : 'DYtautau'     }
-        
-        return listDatasets
+        self.view.set_footer( urwid.AttrMap( urwid.Text('selected: %d   |   %s' % (len(self.selectedList), msg)), 'head' ) )
 
 
     #--------------------------------------------------------------------------
@@ -313,8 +338,31 @@ class FileListTool():
             void
         """
 
+        # make sure filename is not empty
+        filename = self.filenameOption.get_edit_text()
+        if filename == u'':
+            self.setStatusMessage('<WARNING>: no filename specified!')
+            return
+
+        # make sure that at least one sample has been selected
+        if len(self.selectedList) < 1:
+            self.setStatusMessage('<WARNING>: no dataset selected!')
+            return
+
+
+        # create sample list and call MainzGridManager
+        samples = []
         for entry in self.selectedList:
-            pass
+            samples.append( entry.path )
+
+        statusCode = self.grid.createFileList( filename, samples )
+        if statusCode == 0:
+            self.setStatusMessage('<INFO>: Filelist successfully created!')
+            return
+        elif statusCode == 1:
+            self.setStatusMessage('<WARNING>: error occured while creating filelist!')
+            return
+
 
 
 
