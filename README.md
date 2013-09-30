@@ -35,7 +35,7 @@ Simply run the tool and select your datasets by pressing `ENTER`. You can use th
 
 Command overview:
 | Key     | Function                              |
-|:-------:|---------------------------------------|
+| :-----: | ------------------------------------- |
 | `ENTER` | (un)select sample                     |
 | `Tab`   | switch between available/selected list|
 | `c`     | Create file list                      |
