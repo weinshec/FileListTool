@@ -31,14 +31,16 @@ Finally you can run the tool via
 
 
 ## Usage
-Simply run the tool and select your datasets by pressing <kbd>ENTER</kbd>. You can use the positive/negative list tags to filter the list of available samples.
+Simply run the tool and select your datasets by pressing `ENTER`. You can use the positive/negative list tags to filter the list of available samples.
 
 Command overview:
-<table>
-  <tr>
-    <td><kbd>ENTER</kbd></td> <td>Select/Unselect sample</td>
-  </tr>
-  <tr>
-    <td><kbd>TAB</kbd></td> <td>Switch between available and selected list</td>
-  </tr>
-</table>
+| Key     | Function                              |
+|:-------:|---------------------------------------|
+| `ENTER` | (un)select sample                     |
+| `Tab`   | switch between available/selected list|
+| `c`     | Create file list                      |
+| `p`/`n` | Set positive/negative tags list       |
+| `f`     | Change filename of filelist           |
+| `d`     | Toggle usage of default output folder |
+
+The default output folder is read from your *ganga_mogon* config file
