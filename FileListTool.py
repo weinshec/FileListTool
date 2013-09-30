@@ -164,6 +164,74 @@ class TextOption(urwid.WidgetWrap):
 
 
 ############################################################    
+##                                         CheckOption class
+############################################################    
+class CheckOption(urwid.WidgetWrap):
+    """ CheckBox option """
+
+    __metaclass__ = urwid.signals.MetaSignals
+    signals = ['modified']
+
+    #--------------------------------------------------------------------------
+    def __init__(self, option, key, state=False):
+        """ Constructor """
+
+        self.option  = ('option'    , u''+option+' <'+key+'>')
+        self.key     = key
+        self.state   = state
+        self.check   = urwid.CheckBox( u'', state=self.state )
+
+        self.pile = urwid.Pile(
+                        [
+                            urwid.Divider(top=1),
+                            urwid.Text(self.option),
+                            self.check
+                        ] )
+
+        super(CheckOption, self).__init__( self.pile )
+
+
+    #--------------------------------------------------------------------------
+    def send_signal(self):
+        """ emit signal 'selected' """
+        urwid.emit_signal(self, 'modified')
+
+
+    #--------------------------------------------------------------------------
+    def keypress (self, size, key):
+        """ Handle keypress events """
+
+        return key
+    
+
+    #--------------------------------------------------------------------------
+    def get_state(self):
+        """
+        Calls the equivalent urwid.CheckBox widget function
+    
+        Returns:
+            bool : the state of the checkbox
+        """
+
+        return self.check.get_state()
+
+
+    #--------------------------------------------------------------------------
+    def toggle_state(self):
+        """
+        Calls the equivalent urwid.CheckBox widget function
+
+        Returns:
+            void
+        """
+        self.check.toggle_state()
+        self.send_signal()
+
+
+
+
+
+############################################################    
 ##                                        FileListTool class
 ############################################################    
 class FileListTool():
@@ -191,12 +259,13 @@ class FileListTool():
             datasetEntries.append( datasetEntry )
 
         # Create header and footer
-        headerButtons = [ urwid.Button (   'c : create list'         ) ,
-                          urwid.Button ( 'tab : change avl/sel list' ) ,
-                          urwid.Button (   'f : choose filename'     ) ,
-                          urwid.Button (   'p : set positive tags'   ) ,
-                          urwid.Button (   'n : set negative tags'   ) ,
-                          urwid.Button (   'q : Quit'                ) ]
+        headerButtons = [ urwid.Padding( urwid.Button (   'c : create list'         ), left=1, right=1)  ,
+                          urwid.Padding( urwid.Button ( '  d : toggle outpur dir'   ), left=1, right=1)  ,
+                          urwid.Padding( urwid.Button ( 'tab : change avl/sel list' ), left=1, right=1)  ,
+                          urwid.Padding( urwid.Button (   'f : choose filename'     ), left=1, right=1)  ,
+                          urwid.Padding( urwid.Button (   'p : set positive tags'   ), left=1, right=1)  ,
+                          urwid.Padding( urwid.Button (   'n : set negative tags'   ), left=1, right=1)  ,
+                          urwid.Padding( urwid.Button (   'q : Quit'                ), left=1, right=1)  ]
         header = urwid.AttrMap( urwid.Columns( headerButtons    ), 'head' )
         footer = urwid.AttrMap( urwid.Text   ('selected: %d   |' % 0 ), 'head' )
 
@@ -213,10 +282,11 @@ class FileListTool():
                                 ] )
 
         # Create Options Widget
-        self.filenameOption = TextOption('Filelist Name:', 'f', 'myList.lst')
-        self.posListOption  = TextOption('Positive Tags:', 'p', ''          )
-        self.negListOption  = TextOption('Negative Tags:', 'n', ''          )
-        self.options = urwid.SimpleListWalker( [self.filenameOption, self.posListOption, self.negListOption] )
+        self.filenameOption  = TextOption  ( 'Filelist Name:'          , 'f' , 'myList.list')
+        self.useDefOutputDir = CheckOption ( 'Use default output dir:' , 'd' , True        )
+        self.posListOption   = TextOption  ( 'Positive Tags:'          , 'p' , ''          )
+        self.negListOption   = TextOption  ( 'Negative Tags:'          , 'n' , ''          )
+        self.options = urwid.SimpleListWalker( [self.filenameOption, self.useDefOutputDir, self.posListOption, self.negListOption] )
         for option in self.options:
             urwid.connect_signal(option, 'modified', self.optionsChanged)
         self.optionsBox = urwid.LineBox ( urwid.Padding( urwid.ListBox( self.options ), left=2), title='Options')
@@ -276,10 +346,12 @@ class FileListTool():
         # Quit via q
         if key is 'q': 
             raise urwid.ExitMainLoop()
+            return
 
         # create the filelist
         if key is 'c':
             self.createFileList()
+            return
 
         # Use tab to switch between datasetList and selectedList
         if key is 'tab':
@@ -287,12 +359,18 @@ class FileListTool():
                 self.samplesPile.set_focus( 1 )
             else:
                 self.samplesPile.set_focus( 0 )
+            return
+
+        if key is 'd':
+            self.useDefOutputDir.toggle_state()
+            return
 
         # Handle options
         for option in self.options:
             if option.key == key:
                 self.options.set_focus( self.options.index(option) )
                 self.centralColumns.set_focus(1)
+            return
 
 
     #--------------------------------------------------------------------------
@@ -349,9 +427,18 @@ class FileListTool():
             return
 
         # make sure file list ends with .list
+        appendedListEnding = False
         if not filename.endswith('.list'):
             filename += '.list'
             appendedListEnding = True
+
+        # check state of default output dir checkbox
+        if self.useDefOutputDir.get_state() == True:
+            from ConfigUtils2  import ConfigUtils
+            configParser = ConfigUtils()                                       
+            configParser.setDefaultConfigName("ganga_mogon")
+            listOutputPath = configParser.getSingleValueFromConfigFile("Diskpool Filelists","DefaultListOutputDir")
+            filename = listOutputPath+'/'+filename
 
         # create sample list and call MainzGridManager
         samples = []
