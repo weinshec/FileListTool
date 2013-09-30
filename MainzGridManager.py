@@ -10,9 +10,11 @@ Description: I/O class interfacing the dq2 tools for MainzGrid
 ############################################################    
 ##                                                   Imports
 ############################################################    
+import sys
 import subprocess
 import shlex
 import os.path
+import logging
 
 
 ############################################################    
@@ -121,8 +123,12 @@ class MainzGridManager():
         cmd = shlex.split( command )
 
         # Invoke command and retrieve stdout and stderr
-        proc     = subprocess.Popen( cmd, stdout = subprocess.PIPE, stderr = subprocess.PIPE )
-        out, err = proc.communicate()
+        try:
+            proc     = subprocess.Popen( cmd, stdout = subprocess.PIPE, stderr = subprocess.PIPE )
+            out, err = proc.communicate()
+        except:
+            logging.critical('Error during command execution: %s\n\tDid you source the dq2 tools?', command)
+            sys.exit(1)
 
         return out, err
 
