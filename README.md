@@ -34,6 +34,7 @@ Finally you can run the tool via
 Simply run the tool and select your datasets by pressing `ENTER`. You can use the positive/negative list tags to filter the list of available samples.
 
 Command overview:
+
 | Key     | Function                              |
 | :-----: | ------------------------------------- |
 | `ENTER` | (un)select sample                     |
