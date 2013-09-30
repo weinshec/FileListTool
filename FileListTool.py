@@ -175,11 +175,11 @@ class FileListTool():
 
 
         self.palette = [
-            ('body','dark cyan', '', 'standout'),
-            ('focus','dark red', 'light blue', 'standout'),
-            ('head','light red', 'black'),
-            ('option','default,bold','','standout'),
-            ('optDefault','',''),
+            ('body'       , 'dark cyan'    , ''           , 'standout') ,
+            ('focus'      , 'dark red'     , 'light blue' , 'standout') ,
+            ('head'       , 'light red'    , ''                       ) ,
+            ('option'     , 'default,bold' , ''           , 'standout') ,
+            ('optDefault' , ''             , '')          ,
             ]
         
         # Read available datasets and connect signals
