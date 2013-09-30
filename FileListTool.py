@@ -300,8 +300,8 @@ class FileListTool():
         """ Set focus on samples list """
 
         # Get selection options and filter
-        posList = self.posListOption.get_edit_text().split(',')
-        negList = self.negListOption.get_edit_text().split(',')
+        posList = [ token.strip() for token in self.posListOption.get_edit_text().split(',') ]
+        negList = [ token.strip() for token in self.negListOption.get_edit_text().split(',') ]
 
         # Remove empty strings from lists
         if u'' in posList: posList.remove(u'')
@@ -309,7 +309,6 @@ class FileListTool():
 
 
         # Update selection list
-        #rejected = [ datasetEntry for datasetEntry in self.datasetList if datasetEntry.matchesCriteria(posList=posList,negList=negList) == True ]
         for sample in self.datasetList[:]:
             if sample.matchesCriteria(posList=posList, negList=negList) == False:
                 self.datasetList .remove( sample )
