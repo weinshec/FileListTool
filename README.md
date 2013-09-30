@@ -32,3 +32,13 @@ Finally you can run the tool via
 
 ## Usage
 Simply run the tool and select your datasets by pressing <kbd>ENTER</kbd>. You can use the positive/negative list tags to filter the list of available samples.
+
+Command overview:
+<table>
+  <tr>
+    <td><kbd>ENTER</kbd></td> <td>Select/Unselect sample</td>
+  </tr>
+  <tr>
+    <td><kbd>TAB</kbd></td> <td>Switch between available and selected list</td>
+  </tr>
+</table>
