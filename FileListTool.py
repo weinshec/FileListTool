@@ -349,6 +349,10 @@ class FileListTool():
             self.setStatusMessage('<WARNING>: no dataset selected!')
             return
 
+        # make sure file list ends with .list
+        if not filename.endswith('.list'):
+            filename += '.list'
+            appendedListEnding = True
 
         # create sample list and call MainzGridManager
         samples = []
@@ -357,7 +361,9 @@ class FileListTool():
 
         statusCode = self.grid.createFileList( filename, samples )
         if statusCode == 0:
-            self.setStatusMessage('<INFO>: Filelist successfully created!')
+            msg = '<INFO>: Filelist successfully created!'
+            if appendedListEnding: msg += ' Added .list extension!'
+            self.setStatusMessage(msg)
             return
         elif statusCode == 1:
             self.setStatusMessage('<WARNING>: error occured while creating filelist!')

@@ -91,6 +91,11 @@ class MainzGridManager():
 
             # iterate of lines and add absolute path prefix
             for line in out.splitlines():
+                
+                # Filter for non-root files
+                if '.root' not in line: continue
+
+                # Create full path
                 fullPath = os.path.join    ( self.__PATH_PREFIX__ , line )
                 fileSize = (os.path.getsize ( fullPath                    ) >> 20) / 1024.0  # size in GB
                 f.write( fullPath + '\t%.3f\n' % fileSize )
