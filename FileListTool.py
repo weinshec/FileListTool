@@ -370,7 +370,7 @@ class FileListTool():
             if option.key == key:
                 self.options.set_focus( self.options.index(option) )
                 self.centralColumns.set_focus(1)
-            return
+                return
 
 
     #--------------------------------------------------------------------------
@@ -415,6 +415,7 @@ class FileListTool():
             void
         """
 
+        self.setStatusMessage('<INFO>: creating Filelist')
         # make sure filename is not empty
         filename = self.filenameOption.get_edit_text()
         if filename == u'':
