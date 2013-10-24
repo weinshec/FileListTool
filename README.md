@@ -39,7 +39,7 @@ Command overview:
 | :-----: | ------------------------------------- |
 | `ENTER` | (un)select sample                     |
 | `Tab`   | switch between available/selected list|
-| `c`     | Create file list                      |
+| `c`     | Create file list (may take some time) |
 | `p`/`n` | Set positive/negative tags list       |
 | `f`     | Change filename of filelist           |
 | `d`     | Toggle usage of default output folder |
